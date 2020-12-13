@@ -1,7 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, File, UploadFile
 import insightface
 from helper import url_to_image
 import numpy as np
+import io
+import cv2
 
 app = FastAPI(title = "Insightface API")
 model = insightface.app.FaceAnalysis()
@@ -22,6 +24,22 @@ async def analyze_image_url(url: str):
             gender = 'Female'
         flatenned_faces.append(Face(age = face.age, gender = gender))
         
+    return {
+        "message": "Success",
+        "faces": flatenned_faces
+    }
+
+@app.post("/analyze-image-file")
+async def create_file(file: bytes = File(...)):
+    nparr = np.fromstring(file, np.uint8)
+    image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    faces = model.get(image)
+    flatenned_faces = []
+    for _, face in enumerate(faces):
+        gender = 'Male'
+        if face.gender==0:
+            gender = 'Female'
+        flatenned_faces.append(Face(age = face.age, gender = gender))
     return {
         "message": "Success",
         "faces": flatenned_faces

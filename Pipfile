@@ -8,6 +8,7 @@ mxnet = "*"
 insightface = "*"
 fastapi = "*"
 uvicorn = "*"
+python-multipart = "*"
 
 [dev-packages]
 pylint = "*"
