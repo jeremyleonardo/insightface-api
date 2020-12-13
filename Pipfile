@@ -4,11 +4,11 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-mxnet = "*"
-insightface = "*"
-fastapi = "*"
-uvicorn = "*"
-python-multipart = "*"
+mxnet = "1.6.0"
+insightface = "0.1.5"
+fastapi = "0.62.0"
+uvicorn = "0.13.0"
+python-multipart = "0.0.5"
 
 [dev-packages]
 pylint = "*"
