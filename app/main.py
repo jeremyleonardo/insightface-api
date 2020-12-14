@@ -1,6 +1,6 @@
 from fastapi import FastAPI, File, UploadFile
 import insightface
-from helper import url_to_image
+from app.helper import url_to_image
 import numpy as np
 import io
 import cv2
