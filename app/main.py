@@ -30,7 +30,7 @@ async def analyze_image_url(url: str):
     }
 
 @app.post("/analyze-image-file")
-async def create_file(file: bytes = File(...)):
+async def analyze_image_file(file: bytes = File(...)):
     nparr = np.fromstring(file, np.uint8)
     image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
     faces = model.get(image)
