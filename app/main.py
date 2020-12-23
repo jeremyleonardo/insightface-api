@@ -4,12 +4,14 @@ from app.helper import url_to_image
 import numpy as np
 import io
 import cv2
+import app.logger as log
 
 app = FastAPI(title = "Insightface API")
 
+log.info("Constructing FaceAnalysis model.")
 fa = insightface.app.FaceAnalysis()
+log.info("Preparing FaceAnalysis model.")
 fa.prepare(ctx_id = -1, nms=0.4)
-
 
 @app.get("/")
 def root():
@@ -24,6 +26,7 @@ async def analyze_image_url_gender_age(url: str):
     faces = fa.get(img)
     flatenned_faces = []
     for _, face in enumerate(faces):
+        log.info("Processing face.")
         gender = 'Male'
         if face.gender==0:
             gender = 'Female'
