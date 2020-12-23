@@ -13,7 +13,7 @@ logging.basicConfig(
 
 def debug(message):
     print(f"{bcolors.OKCYAN}DEBUG:   {bcolors.ENDC}", message)
-    logging.info(message)
+    logging.debug(message)
 
 
 def info(message):
@@ -23,7 +23,7 @@ def info(message):
 
 def error(message):
     print(f"{bcolors.FAIL}ERROR:   {bcolors.FAIL}", message)
-    logging.info(message)
+    logging.error(message)
 
 
 class bcolors:

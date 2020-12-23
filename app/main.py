@@ -8,9 +8,9 @@ import app.logger as log
 
 app = FastAPI(title = "Insightface API")
 
-log.info("Constructing FaceAnalysis model.")
+log.debug("Constructing FaceAnalysis model.")
 fa = insightface.app.FaceAnalysis()
-log.info("Preparing FaceAnalysis model.")
+log.debug("Preparing FaceAnalysis model.")
 fa.prepare(ctx_id = -1, nms=0.4)
 
 @app.get("/")
@@ -22,6 +22,8 @@ def root():
 async def analyze_image_url_gender_age(url: str):
     # Supports multiple faces in a single image
     
+    log.debug("Calling analyze_image_url_gender_age.")
+
     img = url_to_image(url)
     faces = fa.get(img)
     flatenned_faces = []
@@ -42,6 +44,8 @@ async def analyze_image_url_gender_age(url: str):
 async def analyze_image_file_gender_age(file: bytes = File(...)):
     # Supports multiple faces in a single image
 
+    log.debug("Calling analyze_image_file_gender_age.")
+
     nparr = np.fromstring(file, np.uint8)
     image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
     faces = fa.get(image)
@@ -61,17 +65,25 @@ async def analyze_image_file_gender_age(file: bytes = File(...)):
 async def compute_similarity(file1: bytes = File(...), file2: bytes = File(...)):
     # Limited to one face for each images
     
+    log.debug("Calling compute_similarity.")
+
+    log.debug("Decoding first image.")
     nparr = np.fromstring(file1, np.uint8)
     image1 = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
+    log.debug("Decoding second image.")
     nparr = np.fromstring(file2, np.uint8)
     image2 = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
+    log.debug("Processing first image.")
     faces1 = fa.get(image1)
-    faces2 = fa.get(image2)
-
     emb1 = faces1[0].embedding
+
+    log.debug("Processing second image.")
+    faces2 = fa.get(image2)
     emb2 = faces2[0].embedding
+
+    log.debug("Calculating similarity.")
     sim = np.dot(emb1, emb2) / (np.linalg.norm(emb1) * np.linalg.norm(emb2))
 
     return {
