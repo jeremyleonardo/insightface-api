@@ -53,6 +53,30 @@ async def analyze_image_file_gender_age(file: bytes = File(...)):
         "faces": flatenned_faces
     }
 
+
+@app.post("/compute-similarity")
+async def compute_similarity(file1: bytes = File(...), file2: bytes = File(...)):
+    # Limited to one face for each images
+    
+    nparr = np.fromstring(file1, np.uint8)
+    image1 = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+    nparr = np.fromstring(file2, np.uint8)
+    image2 = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+    faces1 = fa.get(image1)
+    faces2 = fa.get(image2)
+
+    emb1 = faces1[0].embedding
+    emb2 = faces2[0].embedding
+    sim = np.dot(emb1, emb2) / (np.linalg.norm(emb1) * np.linalg.norm(emb2))
+
+    return {
+        "message": "Success",
+        "similarity": str(sim)
+    }
+
+
 class Face(object):
     def __init__(self, age, gender):
         self.age = age
