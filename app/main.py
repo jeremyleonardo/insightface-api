@@ -6,17 +6,22 @@ import io
 import cv2
 
 app = FastAPI(title = "Insightface API")
-model = insightface.app.FaceAnalysis()
-model.prepare(ctx_id = -1, nms=0.4)
+
+fa = insightface.app.FaceAnalysis()
+fa.prepare(ctx_id = -1, nms=0.4)
+
 
 @app.get("/")
 def root():
     return {"message": "Insightface API web service is running"}
 
-@app.post("/analyze-image-url")
-async def analyze_image_url(url: str):
+
+@app.post("/analyze-image-url-gender-age")
+async def analyze_image_url_gender_age(url: str):
+    # Supports multiple faces in a single image
+    
     img = url_to_image(url)
-    faces = model.get(img)
+    faces = fa.get(img)
     flatenned_faces = []
     for _, face in enumerate(faces):
         gender = 'Male'
@@ -29,11 +34,14 @@ async def analyze_image_url(url: str):
         "faces": flatenned_faces
     }
 
-@app.post("/analyze-image-file")
-async def analyze_image_file(file: bytes = File(...)):
+
+@app.post("/analyze-image-file-gender-age")
+async def analyze_image_file_gender_age(file: bytes = File(...)):
+    # Supports multiple faces in a single image
+
     nparr = np.fromstring(file, np.uint8)
     image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-    faces = model.get(image)
+    faces = fa.get(image)
     flatenned_faces = []
     for _, face in enumerate(faces):
         gender = 'Male'
