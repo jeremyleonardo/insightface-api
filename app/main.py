@@ -8,7 +8,8 @@ import app.logger as log
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, exc
+from sqlalchemy.exc import IntegrityError
 from app.settings import DATABASE_URL
 from app.models import Face
 from sqlalchemy.orm import sessionmaker
@@ -94,19 +95,30 @@ async def upload_selfie(name: str, file: bytes = File(...)):
     session = Session()
 
     try:
-        face = Face(name = name, age = fa_faces[0].age, gender = fa_faces.gender, created_at = datetime.today())
+        face = Face(name = name, age = fa_faces[0].age, gender = fa_faces[0].gender, embedding = json.dumps(fa_faces[0].embedding.tolist()), created_at = datetime.today())
         session.add(face)
         session.commit()
-        res_face = {"name": face.name, "age": face.age, "gender": face.gender, "embedding": json.dumps(face.embedding.tolist())}
+        res_face = {"name": face.name, "age": face.age, "gender": face.gender, "embedding": face.embedding}
         json_compatible_faces = jsonable_encoder(res_face)
 
         session.close()
         return JSONResponse(content=json_compatible_faces)
 
     except Exception as exc:
-        log.error(exc)
-        session.close()
-        return JSONResponse(status_code=500)
+        if(isinstance(exc, IntegrityError)):
+            log.debug(exc)
+            return JSONResponse(status_code=400, content={
+                "status_code": 400,
+                "message": "Data integrity error"
+                })
+        else:
+            log.error(exc)
+            print(type(exc))
+            session.close()
+            return JSONResponse(status_code=500, content={
+                "status_code": 500,
+                "message": "Server error"
+                })
 
 
 @app.post("/compute-selfie-image-files-similarity")
@@ -135,7 +147,10 @@ async def compute_selfie_image_files_similarity(file1: bytes = File(...), file2:
         return JSONResponse(content=res)
     except Exception as exc:
         log.error(exc)
-        return JSONResponse(status_code=500)
+        return JSONResponse(status_code=500, content={
+                "status_code": 500,
+                "message": "Server error"
+                })
 
 
 def analyze_image(img):
@@ -143,7 +158,7 @@ def analyze_image(img):
     try:
         faces = fa.get(img)
         for _, face in enumerate(faces):
-            log.info("Processing face.")
+            log.debug("Processing face.")
             gender = 'M'
             if face.gender==0:
                 gender = 'F'

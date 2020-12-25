@@ -1,5 +1,5 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, DateTime, Text
+from sqlalchemy import Column, Integer, String, DateTime, Text, UniqueConstraint
 
 Base = declarative_base()
 
@@ -13,6 +13,9 @@ class Face(Base):
     embedding = Column(Text)
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
+    __table_args__ = (
+        UniqueConstraint('name'),
+        )
 
     def __repr__(self):
         return "<Face(name='%s', age='%d', gender='%s')>" % (
