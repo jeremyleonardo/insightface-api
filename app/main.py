@@ -140,7 +140,8 @@ async def compute_selfie_image_files_similarity(file1: bytes = File(...), file2:
 
     try:
         log.debug("Calculating similarity.")
-        sim = np.dot(emb1, emb2) / (np.linalg.norm(emb1) * np.linalg.norm(emb2))
+        sim = compute_similarity(emb1, emb2)
+        assert(sim != -99) 
         res = {
             "similarity": str(sim)
         }
@@ -151,6 +152,15 @@ async def compute_selfie_image_files_similarity(file1: bytes = File(...), file2:
                 "status_code": 500,
                 "message": "Server error"
                 })
+
+
+def compute_similarity(embedding1, embedding2):
+    try:
+        sim = np.dot(embedding1, embedding2) / (np.linalg.norm(embedding1) * np.linalg.norm(embedding2))
+        return sim
+    except Exception as exc:
+        log.error(exc)
+        return -99
 
 
 def analyze_image(img):
