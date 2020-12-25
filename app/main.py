@@ -6,12 +6,28 @@ import io
 import cv2
 import app.logger as log
 
+from sqlalchemy import create_engine
+from app.settings import DATABASE_URL
+from app.models import Face
+from sqlalchemy.orm import sessionmaker
+from datetime import datetime, date
+from typing import Optional
+from app.database import create_database
+
+
 app = FastAPI(title = "Insightface API")
 
 log.debug("Constructing FaceAnalysis model.")
 fa = insightface.app.FaceAnalysis()
 log.debug("Preparing FaceAnalysis model.")
 fa.prepare(ctx_id = -1, nms=0.4)
+
+
+engine = create_engine(DATABASE_URL)
+Session = sessionmaker(bind=engine)
+
+create_database(engine)
+
 
 @app.get("/")
 def root():
@@ -29,9 +45,9 @@ async def analyze_image_url_gender_age(url: str):
     flatenned_faces = []
     for _, face in enumerate(faces):
         log.info("Processing face.")
-        gender = 'Male'
+        gender = 'M'
         if face.gender==0:
-            gender = 'Female'
+            gender = 'F'
         flatenned_faces.append(Face(age = face.age, gender = gender))
         
     return {
@@ -51,9 +67,9 @@ async def analyze_image_file_gender_age(file: bytes = File(...)):
     faces = fa.get(image)
     flatenned_faces = []
     for _, face in enumerate(faces):
-        gender = 'Male'
+        gender = 'M'
         if face.gender==0:
-            gender = 'Female'
+            gender = 'F'
         flatenned_faces.append(Face(age = face.age, gender = gender))
     return {
         "message": "Success",
@@ -91,8 +107,3 @@ async def compute_similarity(file1: bytes = File(...), file2: bytes = File(...))
         "similarity": str(sim)
     }
 
-
-class Face(object):
-    def __init__(self, age, gender):
-        self.age = age
-        self.gender = gender
