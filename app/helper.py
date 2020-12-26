@@ -23,3 +23,15 @@ def file_to_image(file):
     except Exception as exc:
         log.error(exc)
         return None
+
+
+def string_to_nparray(string):
+    log.debug("Converting string to nparray")
+    try:
+        rpr = string.replace("[", "")
+        rpr = rpr.replace("]", "")
+        res = np.fromstring(rpr, dtype=float, sep=',')
+        return res
+    except Exception as exc:
+        log.error(exc)
+        return None
