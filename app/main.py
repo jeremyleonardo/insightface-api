@@ -1,7 +1,7 @@
 from fastapi import FastAPI, File
 import insightface
 import json
-from app.helper import url_to_image, file_to_image
+from app.helper import url_to_image, file_to_image, string_to_nparray
 import numpy as np
 import cv2
 import app.logger as log
@@ -86,15 +86,16 @@ async def upload_selfie(name: str, file: bytes = File(...)):
 
     log.debug("Calling upload_selfie.")
 
-    image = file_to_image(file)
-
-    fa_faces = analyze_image(image)
-
     name = name.lower()
 
     session = Session()
-
     try:
+        db_face = session.query(Face).filter_by(name = name).first()
+        assert db_face == None
+
+        image = file_to_image(file)
+        fa_faces = analyze_image(image)
+
         face = Face(name = name, age = fa_faces[0].age, gender = fa_faces[0].gender, embedding = json.dumps(fa_faces[0].embedding.tolist()), created_at = datetime.today())
         session.add(face)
         session.commit()
@@ -121,6 +122,55 @@ async def upload_selfie(name: str, file: bytes = File(...)):
                 })
 
 
+@app.post("/face-verification")
+async def face_verification(name: str, file: bytes = File(...)):
+    # Supports single face in a single image
+
+    log.debug("Calling face_verification.")
+
+    name = name.lower()
+
+    session = Session()
+    
+    try:
+        target_face = session.query(Face).filter_by(name = name).first()
+        assert target_face != None
+    except Exception as exc:
+        log.debug(exc)
+        return JSONResponse(status_code=400, content={
+            "status_code": 400,
+            "message": "Name not found"
+            })
+
+    image = file_to_image(file)
+
+    fa_faces = analyze_image(image)
+    inp_face = fa_faces[0]
+
+    try:
+        target_emb = string_to_nparray(target_face.embedding)
+
+        sim = compute_similarity(inp_face.embedding, target_emb)
+        assert(sim != -99) 
+        sim *= 100
+        if(sim >= 60): status = True
+        else: status = False
+        res = {
+            "result": {
+                "similarity": int(sim),
+                "status": status
+            }
+        }
+        return JSONResponse(content=res)
+
+    except Exception as exc:
+        log.error(exc)
+        return JSONResponse(status_code=500, content={
+                "status_code": 500,
+                "message": "Server error"
+                })    
+
+
 @app.post("/compute-selfie-image-files-similarity")
 async def compute_selfie_image_files_similarity(file1: bytes = File(...), file2: bytes = File(...)):
     # Limited to one face for each images
@@ -139,11 +189,11 @@ async def compute_selfie_image_files_similarity(file1: bytes = File(...), file2:
     emb2 = faces2[0].embedding
 
     try:
-        log.debug("Calculating similarity.")
         sim = compute_similarity(emb1, emb2)
         assert(sim != -99) 
+        sim *= 100
         res = {
-            "similarity": str(sim)
+            "similarity": int(sim)
         }
         return JSONResponse(content=res)
     except Exception as exc:
@@ -155,6 +205,7 @@ async def compute_selfie_image_files_similarity(file1: bytes = File(...), file2:
 
 
 def compute_similarity(embedding1, embedding2):
+    log.debug("Calculating similarity.")
     try:
         sim = np.dot(embedding1, embedding2) / (np.linalg.norm(embedding1) * np.linalg.norm(embedding2))
         return sim
