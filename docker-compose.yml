@@ -1,0 +1,21 @@
+version: "2.0"
+   
+services:
+  web:
+    build: .
+    command: pipenv run uvicorn app.main:app --host 0.0.0.0 --port 8080
+    volumes:
+      - .:/code
+      - /root/.local/share/virtualenvs/
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    env_file:
+      - .env
+  db:
+    image: postgres
+    environment:
+      - POSTGRES_DB=insightface_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
