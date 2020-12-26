@@ -12,6 +12,8 @@ ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get install -y libglib2.0-0
 
+RUN apt-get install -y libpq-dev
+
 RUN pip3 install pipenv
 
 COPY Pipfile* ./
