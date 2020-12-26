@@ -16,10 +16,8 @@ RUN pip3 install pipenv
 
 COPY Pipfile* ./
 
-RUN pipenv install
+RUN pipenv install --verbose
 
 COPY ./app /app
 
 EXPOSE 8080
-
-CMD ["pipenv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
