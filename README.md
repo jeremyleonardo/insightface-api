@@ -6,7 +6,7 @@ A simple <a href="https://github.com/deepinsight/insightface">deepinsight/insigh
 
 ## Instructions
 
-1. Create your own .env using example.env
+1. Create your own .env using .env.example
 2. Replace placeholder ``DATABASE_URL`` with your postgresql database url
 
 ## Starting
