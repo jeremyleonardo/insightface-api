@@ -11,7 +11,17 @@ A simple <a href="https://github.com/deepinsight/insightface">deepinsight/insigh
 
 ## Starting
 
-Using pipenv:
+Using docker:
+```
+docker-compose up
+```
+Using pipenv (you'll need to setup postgresql on your own):
 ```
 pipenv run uvicorn app.main:app --reload
 ```
+
+## Models
+
+- arcface_r100_v1 : http://insightface.ai/files/models/arcface_r100_v1.zip
+- genderage_v1 : http://insightface.ai/files/models/genderage_v1.zip
+- retinaface_r50_v1 : http://insightface.ai/files/models/retinaface_r50_v1.zip
