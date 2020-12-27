@@ -3,11 +3,11 @@ version: "3.8"
 services:
   web:
     image: jeremyleo/insightface-api:latest
-    command: pipenv run uvicorn app.main:app --host 0.0.0.0 --port 8080
+    command: pipenv run uvicorn app.main:app --host 0.0.0.0 --port 80
     volumes:
-      - models:/root/.insightface/models
+      - ./models:/root/.insightface/models
     ports:
-      - "8080:8080"
+      - "80:80"
     depends_on:
       - db
     environment: 
