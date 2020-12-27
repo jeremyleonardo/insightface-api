@@ -4,10 +4,22 @@
 
 A simple <a href="https://github.com/deepinsight/insightface">deepinsight/insightface</a> implementation with <a href="https://github.com/tiangolo/fastapi">FastAPI</a> for face verification.
 
-## Instructions
+## Available APIs
 
-1. Create your own .env using .env.example
-2. Replace placeholder ``DATABASE_URL`` with your postgresql database url
+- ``[POST] /upload-selfie`` - Upload Selfie
+  - Upload selfie image file with person name and store it to database
+
+- ``[POST] /face-verification`` - Face Verification
+  - Upload selfie image file and a person name from the database to verify
+
+- ``[POST] /analyze-image-url`` - Analyze Image Url
+  - Send image url to analyze
+
+- ``[POST] ​/analyze-image-file`` - Analyze Image File
+  - Upload image file to analyze
+
+- ``[POST] /compute-selfie-image-files-similarity`` -  Compute Selfie Image Files Similarity
+  - Compute similarity of 2 selfie image files
 
 ## Starting
 
@@ -15,7 +27,7 @@ Using docker-compose:
 ```
 docker-compose up
 ```
-Using pipenv (you'll need to setup postgresql on your own):
+Using pipenv (you'll need to setup postgresql and .env on your own):
 ```
 pipenv run uvicorn app.main:app --reload
 ```
