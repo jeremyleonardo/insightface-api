@@ -10,7 +10,7 @@ from fastapi.encoders import jsonable_encoder
 
 from sqlalchemy import create_engine, exc
 from sqlalchemy.exc import IntegrityError
-from app.settings import DATABASE_URL
+import app.settings as settings
 from app.models import Face
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime, date
@@ -26,7 +26,7 @@ log.debug("Preparing FaceAnalysis model.")
 fa.prepare(ctx_id = -1, nms=0.4)
 
 
-engine = create_engine(DATABASE_URL)
+engine = create_engine(settings.DATABASE_URL)
 Session = sessionmaker(bind=engine)
 
 create_database(engine)

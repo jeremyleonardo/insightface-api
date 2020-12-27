@@ -5,7 +5,7 @@ import app.settings as settings
 
 def create_database(engine):
 
-    if settings.DROP_ALL_EACH_RUN == 'True':
+    if settings.DROP_ALL_EACH_RUN:
         try:
             log.debug("Dropping tables.")
             Base.metadata.drop_all(engine)
@@ -13,7 +13,7 @@ def create_database(engine):
             log.error("Failed to drop tables.")
             log.error(exc)
     
-    if settings.CREATE_ALL_EACH_RUN == 'True':
+    if settings.CREATE_ALL_EACH_RUN:
         try:
             log.debug("Creating tables.")
             Base.metadata.create_all(engine)

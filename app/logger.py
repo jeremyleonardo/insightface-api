@@ -1,9 +1,10 @@
 import logging
+import app.settings as settings
 
 filename = "main"
 
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.DEBUG if settings.DEBUG else logging.INFO,
     format="{asctime} {levelname:<8}: {message}",
     style='{',
     filename='%s.log' % filename,
