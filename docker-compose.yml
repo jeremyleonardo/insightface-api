@@ -12,6 +12,7 @@ services:
       - db
     environment: 
       - DATABASE_URL=postgres://postgres:password@db/insightface_db
+      - DEBUG=True
     # env_file:
     #   - .env
   db:

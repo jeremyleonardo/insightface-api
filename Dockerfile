@@ -17,5 +17,3 @@ COPY Pipfile* ./
 RUN pipenv install --verbose
 
 COPY ./app /app
-
-COPY docker-compose.yml ./

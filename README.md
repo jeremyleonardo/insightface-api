@@ -6,6 +6,9 @@ A simple <a href="https://github.com/deepinsight/insightface">deepinsight/insigh
 
 ## Available APIs
 
+- ``[GET] /`` - Root
+  - Check API status
+
 - ``[POST] /upload-selfie`` - Upload Selfie
   - Upload selfie image file with person name and store it to database
 
@@ -20,6 +23,15 @@ A simple <a href="https://github.com/deepinsight/insightface">deepinsight/insigh
 
 - ``[POST] /compute-selfie-image-files-similarity`` -  Compute Selfie Image Files Similarity
   - Compute similarity of 2 selfie image files
+
+- ``[PUT] /faces`` - Update Face
+  - Update face data (name or face data)
+
+- ``[GET] /faces`` - Get Faces
+  - Get faces
+
+- ``[DELETE] /faces`` - Delete Face
+  - Delete a face from database using name
 
 ## Starting
 
