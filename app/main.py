@@ -129,10 +129,10 @@ async def upload_selfie(name: str, file: bytes = File(...)):
 
     log.debug("Calling upload_selfie.")
 
-    name = name.lower()
     json_resp = {"message": "Server Error"}
     session = Session()
     try:
+        name = name.lower()
         db_face = session.query(Face).filter_by(name = name).first()
         assert db_face is None
 
@@ -156,11 +156,50 @@ async def upload_selfie(name: str, file: bytes = File(...)):
                 })
         else:
             log.error(exc)
-            print(type(exc))
-            json_resp = JSONResponse(status_code=500, content={
-                "status_code": 500,
-                "message": "Internal Server Error"
-                })
+            json_resp = json_resp = getDefaultError()
+    else:
+        json_resp = JSONResponse(content={
+            "status_code": 200,
+            "result": result
+            })
+    finally:
+        session.close()
+        return json_resp
+
+
+@app.put("/face")
+async def update_face(id: int, name: str = None, file: bytes = None):
+    # Supports single face in a single image
+
+    log.debug("Calling upload_selfie.")
+
+    json_resp = {"message": "Server Error"}
+    session = Session()
+    try:
+
+        db_face = session.query(Face).get(id)
+        if(db_face is None):
+            return getDefaultError(status_code=404, message="Face not found.") 
+
+        if(file is not None):
+            image = file_to_image(file)
+            fa_faces = analyze_image(image)
+            db_face.embedding = json.dumps(fa_faces[0].embedding.tolist())
+
+        if(name is not None):
+            name = name.lower()
+            db_face.name = name
+        
+        db_face.updated_at = datetime.today()
+        session.commit()
+        res_face = {"id": db_face.id, "name": db_face.name, "age": db_face.age, "gender": db_face.gender, "embedding": db_face.embedding}
+        json_compatible_faces = jsonable_encoder(res_face)
+
+        result = json_compatible_faces
+
+    except Exception as exc:
+        log.error(exc)
+        json_resp = getDefaultError()
     else:
         json_resp = JSONResponse(content={
             "status_code": 200,
