@@ -167,7 +167,7 @@ async def upload_selfie(name: str, file: bytes = File(...)):
         return json_resp
 
 
-@app.put("/face")
+@app.put("/faces")
 async def update_face(id: int, name: str = None, file: bytes = None):
     # Supports single face in a single image
 
