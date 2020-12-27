@@ -5,6 +5,7 @@ import urllib.request
 import app.logger as log
 
 def url_to_image(url):
+    log.debug("Converting url to image")
     try:
         resp = urllib.request.urlopen(url)
         image = np.asarray(bytearray(resp.read()), dtype="uint8")
@@ -16,6 +17,7 @@ def url_to_image(url):
 
 
 def file_to_image(file):
+    log.debug("Converting file to image")
     try:
         nparr = np.fromstring(file, np.uint8)
         image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
