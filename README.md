@@ -20,6 +20,35 @@ Using pipenv (you'll need to setup postgresql on your own):
 pipenv run uvicorn app.main:app --reload
 ```
 
+## Docker Compose
+
+docker-compose.yml
+```yml
+version: "3.8"
+   
+services:
+  web:
+    image: jeremyleo/insightface-api:latest
+    command: pipenv run uvicorn app.main:app --host 0.0.0.0 --port 80
+    volumes:
+      - ./models:/root/.insightface/models
+    ports:
+      - "80:80"
+    depends_on:
+      - db
+    environment: 
+      - DATABASE_URL=postgres://postgres:password@db/insightface_db
+  db:
+    image: postgres:13.1
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRES_DB=insightface_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+
+```
+
 ## Models
 
 Optional: Download & extract everything and put it on the models folder only if you're using docker-compose
