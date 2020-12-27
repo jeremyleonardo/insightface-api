@@ -21,5 +21,3 @@ COPY Pipfile* ./
 RUN pipenv install --verbose
 
 COPY ./app /app
-
-EXPOSE 8080
