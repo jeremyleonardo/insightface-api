@@ -176,10 +176,10 @@ async def upload_selfie(name: str, file: bytes = File(...)):
 
 
 @app.put("/faces")
-async def update_face(id: int, name: str = None, file: bytes = None):
+async def update_face(id: int, name: str = None, file: bytes = File(None)):
     # Supports single face in a single image
 
-    log.debug("Calling upload_selfie.")
+    log.debug("Calling update_face.")
 
     json_resp = {"message": "Server Error"}
     session = Session()
@@ -192,7 +192,11 @@ async def update_face(id: int, name: str = None, file: bytes = None):
         if(file is not None):
             image = file_to_image(file)
             fa_faces = analyze_image(image)
-            db_face.embedding = json.dumps(fa_faces[0].embedding.tolist())
+            fa_emb_str = str(json.dumps(fa_faces[0].embedding.tolist()))
+            emb = "cube(ARRAY" + fa_emb_str+ ")"
+            update_query = "UPDATE faces SET embedding = " + emb + " WHERE id = '" + str(db_face.id) + "';"
+            session.execute(update_query)
+            session.commit()
 
         if(name is not None):
             name = name.lower()
