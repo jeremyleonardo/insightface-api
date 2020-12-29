@@ -1,6 +1,6 @@
 import app.logger as log
-from app.models import Base
 import app.settings as settings
+from app.database.models import Base
 
 
 def init(engine):
@@ -14,6 +14,11 @@ def init(engine):
             log.error(exc)
     
     if settings.CREATE_ALL_EACH_RUN:
+        try:
+            log.debug("Creating extension cube.")
+            engine.execute("create extension cube;")
+        except Exception as exc:
+            pass
         try:
             log.debug("Creating tables.")
             Base.metadata.create_all(engine)

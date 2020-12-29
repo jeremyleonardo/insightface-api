@@ -16,7 +16,7 @@ services:
     # env_file:
     #   - .env
   db:
-    image: postgres:13.1
+    image: jeremyleo/postgres-2k-cube:13.1
     ports:
       - '5432:5432'
     environment:

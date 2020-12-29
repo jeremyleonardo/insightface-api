@@ -13,7 +13,7 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy import create_engine, exc
 from sqlalchemy.exc import IntegrityError
 import app.settings as settings
-from app.models import Face
+from app.database.models import Face
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime, date
 from typing import List, Optional
@@ -52,7 +52,6 @@ def root():
             })
     finally:
         return json_resp
-
 
 
 @app.post("/analyze-image-url")
@@ -139,13 +138,22 @@ async def upload_selfie(name: str, file: bytes = File(...)):
         image = file_to_image(file)
         fa_faces = analyze_image(image)
 
-        face = Face(name = name, age = fa_faces[0].age, gender = fa_faces[0].gender, embedding = json.dumps(fa_faces[0].embedding.tolist()), created_at = datetime.today())
+        fa_emb_str = str(json.dumps(fa_faces[0].embedding.tolist()))
+        emb = "cube(ARRAY" + fa_emb_str+ ")"
+
+        face = Face(name = name, age = fa_faces[0].age, gender = fa_faces[0].gender,  created_at = datetime.today())
         session.add(face)
+
+        update_query = "UPDATE faces SET embedding = " + emb + " WHERE name = '" + str(face.name) + "';"
         session.commit()
+
+        session.execute(update_query)
+        session.commit()
+        
         res_face = {"name": face.name, "age": face.age, "gender": face.gender, "embedding": face.embedding}
         json_compatible_faces = jsonable_encoder(res_face)
 
-        result =json_compatible_faces
+        result = json_compatible_faces
 
     except Exception as exc:
         if(isinstance(exc, IntegrityError)):
