@@ -17,7 +17,7 @@ from app.models import Face
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime, date
 from typing import List, Optional
-from app.database import create_database, wait_database
+from app.database import init as init_db, wait as wait_db
 
 
 app = FastAPI(title = "Insightface API")
@@ -31,8 +31,8 @@ fa.prepare(ctx_id = -1, nms=0.4)
 engine = create_engine(settings.DATABASE_URL)
 Session = sessionmaker(bind=engine)
 
-wait_database(engine)
-create_database(engine)
+wait_db(engine)
+init_db(engine)
 
 
 @app.get("/")
