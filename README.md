@@ -56,7 +56,7 @@ docker-compose.yml
 version: "3.8"
    
 services:
-  web:
+  api:
     image: jeremyleo/insightface-api:latest
     command: pipenv run uvicorn app.main:app --host 0.0.0.0 --port 80
     volumes:
