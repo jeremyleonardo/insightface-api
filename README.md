@@ -6,6 +6,8 @@ A simple <a href="https://github.com/deepinsight/insightface">deepinsight/insigh
 
 ## Available APIs
 
+It is recommended to test the available APIs from ``[GET] /docs``
+
 - ``[GET] /`` - Root
   - Check API status
 
@@ -15,23 +17,26 @@ A simple <a href="https://github.com/deepinsight/insightface">deepinsight/insigh
 - ``[POST] /face-verification`` - Face Verification
   - Upload selfie image file and a person name from the database to verify
 
-- ``[POST] /analyze-image-url`` - Analyze Image Url
-  - Send image url to analyze
-
-- ``[POST] ​/analyze-image-file`` - Analyze Image File
-  - Upload image file to analyze
-
-- ``[POST] /compute-selfie-image-files-similarity`` -  Compute Selfie Image Files Similarity
-  - Compute similarity of 2 selfie image files
+- ``[POST] /face-search`` - Face Search
+  - Upload selfie image file to search for similar faces in database
 
 - ``[PUT] /faces`` - Update Face
-  - Update face data (name or face data)
+  - Update face data (name or face data) in the database
 
 - ``[GET] /faces`` - Get Faces
-  - Get faces
+  - Get faces from database
 
 - ``[DELETE] /faces`` - Delete Face
-  - Delete a face from database using name
+  - Delete a face from database using name from database
+
+- ``[POST] /analyze-image-url`` - Analyze Image Url
+  - Send image url to analyze (does not save to database)
+
+- ``[POST] ​/analyze-image-file`` - Analyze Image File
+  - Upload image file to analyze (does not save to database)
+
+- ``[POST] /compute-selfie-image-files-similarity`` -  Compute Selfie Image Files Similarity
+  - Compute similarity of 2 selfie image files (does not save to database)
 
 ## Starting
 
@@ -63,7 +68,7 @@ services:
     environment: 
       - DATABASE_URL=postgres://postgres:password@db/insightface_db
   db:
-    image: postgres:13.1
+    image: jeremyleo/postgres-2k-cube:13.1
     ports:
       - '5432:5432'
     environment:

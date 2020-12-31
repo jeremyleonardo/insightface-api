@@ -13,7 +13,7 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy import create_engine, exc
 from sqlalchemy.exc import IntegrityError
 import app.settings as settings
-from app.models import Face
+from app.database.models import Face
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime, date
 from typing import List, Optional
@@ -52,7 +52,6 @@ def root():
             })
     finally:
         return json_resp
-
 
 
 @app.post("/analyze-image-url")
@@ -127,6 +126,8 @@ async def analyze_image_file(file: bytes = File(...)):
 async def upload_selfie(name: str, file: bytes = File(...)):
     # Supports single face in a single image
 
+    # TODO : More validation for name checking
+
     log.debug("Calling upload_selfie.")
 
     json_resp = {"message": "Server Error"}
@@ -139,13 +140,22 @@ async def upload_selfie(name: str, file: bytes = File(...)):
         image = file_to_image(file)
         fa_faces = analyze_image(image)
 
-        face = Face(name = name, age = fa_faces[0].age, gender = fa_faces[0].gender, embedding = json.dumps(fa_faces[0].embedding.tolist()), created_at = datetime.today())
+        fa_emb_str = str(json.dumps(fa_faces[0].embedding.tolist()))
+        emb = "cube(ARRAY" + fa_emb_str+ ")"
+
+        face = Face(name = name, age = fa_faces[0].age, gender = fa_faces[0].gender,  created_at = datetime.today())
         session.add(face)
+
+        update_query = "UPDATE faces SET embedding = " + emb + " WHERE name = '" + str(face.name) + "';"
         session.commit()
+
+        session.execute(update_query)
+        session.commit()
+        
         res_face = {"name": face.name, "age": face.age, "gender": face.gender, "embedding": face.embedding}
         json_compatible_faces = jsonable_encoder(res_face)
 
-        result =json_compatible_faces
+        result = json_compatible_faces
 
     except Exception as exc:
         if(isinstance(exc, IntegrityError)):
@@ -168,10 +178,10 @@ async def upload_selfie(name: str, file: bytes = File(...)):
 
 
 @app.put("/faces")
-async def update_face(id: int, name: str = None, file: bytes = None):
+async def update_face(id: int, name: str = None, file: bytes = File(None)):
     # Supports single face in a single image
 
-    log.debug("Calling upload_selfie.")
+    log.debug("Calling update_face.")
 
     json_resp = {"message": "Server Error"}
     session = Session()
@@ -184,7 +194,11 @@ async def update_face(id: int, name: str = None, file: bytes = None):
         if(file is not None):
             image = file_to_image(file)
             fa_faces = analyze_image(image)
-            db_face.embedding = json.dumps(fa_faces[0].embedding.tolist())
+            fa_emb_str = str(json.dumps(fa_faces[0].embedding.tolist()))
+            emb = "cube(ARRAY" + fa_emb_str+ ")"
+            update_query = "UPDATE faces SET embedding = " + emb + " WHERE id = '" + str(db_face.id) + "';"
+            session.execute(update_query)
+            session.commit()
 
         if(name is not None):
             name = name.lower()
@@ -230,12 +244,12 @@ async def face_verification(name: str, file: bytes = File(...)):
             "message": "Name not found"
             })
 
-    image = file_to_image(file)
-
-    fa_faces = analyze_image(image)
-    inp_face = fa_faces[0]
-
     try:
+        image = file_to_image(file)
+
+        fa_faces = analyze_image(image)
+        inp_face = fa_faces[0]
+
         target_emb = string_to_nparray(target_face.embedding)
 
         sim = compute_similarity(inp_face.embedding, target_emb)
@@ -247,6 +261,63 @@ async def face_verification(name: str, file: bytes = File(...)):
             "similarity": int(sim),
             "status": status
             }
+
+    except Exception as exc:
+        log.error(exc)
+        json_resp = getDefaultError()
+    else:
+        json_resp = JSONResponse(content={
+            "status_code": 200,
+            "result": result
+            })
+    finally:
+        session.close()
+        return json_resp
+
+
+
+@app.post("/face-search")
+async def face_search(file: bytes = File(...)):
+    # Supports single face in a single image
+
+    log.debug("Calling face_search.")
+
+    json_resp = {"message": "Server Error"}
+    session = Session()
+
+    try:
+        image = file_to_image(file)
+
+        fa_faces = analyze_image(image)
+        inp_face = fa_faces[0]
+
+        fa_emb_str = str(json.dumps(inp_face.embedding.tolist()))
+        emb = "cube(ARRAY" + fa_emb_str+ ")"
+        query = (
+            "SELECT sub.* "
+            "FROM "
+            "( "
+                "SELECT *, (1-(( embedding <-> " + emb + " )/2))*100 AS similarity "
+                "FROM faces "
+            ") AS sub "
+            "WHERE sub.gender = '" + inp_face.gender + "' AND sub.similarity > 60 "
+            "ORDER BY sub.similarity DESC;"
+            )
+        
+        query_res = session.execute(query)
+   
+        rows_proxy = query_res.fetchall()
+        
+        dict, arr = {}, []
+        for row_proxy in rows_proxy:
+            for column, value in row_proxy.items():
+                dict = {**dict, **{column: value}}
+                print(dict)
+            arr.append(dict)
+
+        result = jsonable_encoder({
+            "similar_faces": arr
+            })
 
     except Exception as exc:
         log.error(exc)
@@ -380,7 +451,8 @@ def analyze_image(img):
             gender = 'M'
             if face.gender==0:
                 gender = 'F'
-            res_faces.append(Face(age = face.age, gender = gender, embedding = face.embedding))
+            emb = face.embedding / np.linalg.norm(face.embedding)
+            res_faces.append(Face(age = face.age, gender = gender, embedding = emb))
     except Exception as exc:
         log.error(exc)
     finally:
