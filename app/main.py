@@ -47,57 +47,6 @@ def root():
     return json_resp
 
 
-@app.post("/analyze-image-url")
-async def analyze_image_url(url: str):
-    # Supports multiple faces in a single image
-    
-    log.debug("Calling analyze_image_url.")
-
-    image = url_to_image(url)
-    faces = analyze_image(image, fa)
-    res_faces = []
-    for face in faces:
-        res_faces.append({
-            "age": face.age, 
-            "gender": face.gender, 
-            "embedding": json.dumps(face.embedding.tolist())
-            })
-    json_compatible_faces = jsonable_encoder(res_faces)
-    result = {"faces": json_compatible_faces}
-
-    json_resp = JSONResponse(content={
-        "status_code": 200,
-        "result": result
-        })
-
-    return json_resp
-
-
-@app.post("/analyze-image-file")
-async def analyze_image_file(file: bytes = File(...)):
-    # Supports multiple faces in a single image
-
-    log.debug("Calling analyze_image_file.")
-
-    image = file_to_image(file)
-    faces = analyze_image(image, fa)
-    
-    res_faces = []
-    for face in faces:
-        res_faces.append({
-            "age": face.age, 
-            "gender": face.gender, 
-            "embedding": json.dumps(face.embedding.tolist())
-            })
-    result = jsonable_encoder(res_faces)
-
-    json_resp = JSONResponse(content={
-        "status_code": 200,
-        "result": result
-        })
-    return json_resp
-
-
 @app.post("/upload-selfie")
 async def upload_selfie(name: str, file: bytes = File(...)):
     # Supports single face in a single image
@@ -126,46 +75,6 @@ async def upload_selfie(name: str, file: bytes = File(...)):
     session.commit()
     
     res_face = {"name": face.name, "age": face.age, "gender": face.gender, "embedding": face.embedding}
-    json_compatible_faces = jsonable_encoder(res_face)
-
-    result = json_compatible_faces
-
-    json_resp = JSONResponse(content={
-        "status_code": 200,
-        "result": result
-        })
-
-    session.close()
-    return json_resp
-
-
-@app.put("/faces")
-async def update_face(id: int, name: str = None, file: bytes = File(None)):
-    # Supports single face in a single image
-
-    log.debug("Calling update_face.")
-    session = Session()
-
-    db_face = session.query(Face).get(id)
-    if(db_face is None):
-        raise NotFoundError("Face not found.") 
-
-    if(file is not None):
-        image = file_to_image(file)
-        fa_faces = analyze_image(image, fa)
-        fa_emb_str = str(json.dumps(fa_faces[0].embedding.tolist()))
-        emb = "cube(ARRAY" + fa_emb_str+ ")"
-        update_query = "UPDATE faces SET embedding = " + emb + " WHERE id = '" + str(db_face.id) + "';"
-        session.execute(update_query)
-        session.commit()
-
-    if(name is not None):
-        name = name.lower()
-        db_face.name = name
-    
-    db_face.updated_at = datetime.today()
-    session.commit()
-    res_face = {"id": db_face.id, "name": db_face.name, "age": db_face.age, "gender": db_face.gender, "embedding": db_face.embedding}
     json_compatible_faces = jsonable_encoder(res_face)
 
     result = json_compatible_faces
@@ -266,37 +175,45 @@ async def face_search(file: bytes = File(...)):
     return json_resp
 
 
-@app.post("/compute-selfie-image-files-similarity")
-async def compute_selfie_image_files_similarity(file1: bytes = File(...), file2: bytes = File(...)):
-    # Limited to one face for each images
+@app.put("/faces")
+async def update_face(id: int, name: str = None, file: bytes = File(None)):
+    # Supports single face in a single image
+
+    log.debug("Calling update_face.")
+    session = Session()
+
+    db_face = session.query(Face).get(id)
+    if(db_face is None):
+        raise NotFoundError("Face not found.") 
+
+    if(file is not None):
+        image = file_to_image(file)
+        fa_faces = analyze_image(image, fa)
+        fa_emb_str = str(json.dumps(fa_faces[0].embedding.tolist()))
+        emb = "cube(ARRAY" + fa_emb_str+ ")"
+        update_query = "UPDATE faces SET embedding = " + emb + " WHERE id = '" + str(db_face.id) + "';"
+        session.execute(update_query)
+        session.commit()
+
+    if(name is not None):
+        name = name.lower()
+        db_face.name = name
     
-    log.debug("Calling compute_selfie_image_files_similarity.")
+    db_face.updated_at = datetime.today()
+    session.commit()
+    res_face = {"id": db_face.id, "name": db_face.name, "age": db_face.age, "gender": db_face.gender, "embedding": db_face.embedding}
+    json_compatible_faces = jsonable_encoder(res_face)
 
-    image1 = file_to_image(file1)
-    image2 = file_to_image(file2)
-
-    log.debug("Processing first image.")
-    faces1 = fa.get(image1)
-    emb1 = faces1[0].embedding
-
-    log.debug("Processing second image.")
-    faces2 = fa.get(image2)
-    emb2 = faces2[0].embedding
-
-    sim = compute_similarity(emb1, emb2)
-    assert(sim != -99) 
-    sim *= 100
-    result = {
-        "similarity": int(sim)
-    }
+    result = json_compatible_faces
 
     json_resp = JSONResponse(content={
         "status_code": 200,
         "result": result
         })
 
+    session.close()
     return json_resp
-        
+
 
 @app.get("/faces")
 async def get_faces(limit: int = 10):
@@ -346,6 +263,89 @@ async def delete_face(name: str):
         })
 
     session.close()
+    return json_resp
+
+
+@app.post("/analyze-image-url")
+async def analyze_image_url(url: str):
+    # Supports multiple faces in a single image
+    
+    log.debug("Calling analyze_image_url.")
+
+    image = url_to_image(url)
+    faces = analyze_image(image, fa)
+    res_faces = []
+    for face in faces:
+        res_faces.append({
+            "age": face.age, 
+            "gender": face.gender, 
+            "embedding": json.dumps(face.embedding.tolist())
+            })
+    json_compatible_faces = jsonable_encoder(res_faces)
+    result = {"faces": json_compatible_faces}
+
+    json_resp = JSONResponse(content={
+        "status_code": 200,
+        "result": result
+        })
+
+    return json_resp
+
+
+@app.post("/analyze-image-file")
+async def analyze_image_file(file: bytes = File(...)):
+    # Supports multiple faces in a single image
+
+    log.debug("Calling analyze_image_file.")
+
+    image = file_to_image(file)
+    faces = analyze_image(image, fa)
+    
+    res_faces = []
+    for face in faces:
+        res_faces.append({
+            "age": face.age, 
+            "gender": face.gender, 
+            "embedding": json.dumps(face.embedding.tolist())
+            })
+    result = jsonable_encoder(res_faces)
+
+    json_resp = JSONResponse(content={
+        "status_code": 200,
+        "result": result
+        })
+    return json_resp
+
+
+@app.post("/compute-selfie-image-files-similarity")
+async def compute_selfie_image_files_similarity(file1: bytes = File(...), file2: bytes = File(...)):
+    # Limited to one face for each images
+    
+    log.debug("Calling compute_selfie_image_files_similarity.")
+
+    image1 = file_to_image(file1)
+    image2 = file_to_image(file2)
+
+    log.debug("Processing first image.")
+    faces1 = fa.get(image1)
+    emb1 = faces1[0].embedding
+
+    log.debug("Processing second image.")
+    faces2 = fa.get(image2)
+    emb2 = faces2[0].embedding
+
+    sim = compute_similarity(emb1, emb2)
+    assert(sim != -99) 
+    sim *= 100
+    result = {
+        "similarity": int(sim)
+    }
+
+    json_resp = JSONResponse(content={
+        "status_code": 200,
+        "result": result
+        })
+
     return json_resp
 
 
