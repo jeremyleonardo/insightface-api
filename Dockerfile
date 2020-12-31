@@ -16,4 +16,8 @@ COPY Pipfile* ./
 
 RUN pipenv install --verbose
 
+COPY init_model.py ./
+
+RUN pipenv run python init_model.py
+
 COPY ./app /app
