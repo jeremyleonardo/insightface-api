@@ -216,20 +216,26 @@ async def update_face(id: int, name: str = None, file: bytes = File(None)):
 
 
 @app.get("/faces")
-async def get_faces(limit: int = 10):
+async def get_faces(page_size: int = 10, page: int = 1):
     # Get faces from db
     
     log.debug("Calling get_faces.")
     session = Session()
         
-    if(limit > 100 or limit <= 0):
-        raise ValidationError("Limit must be more than 0 and less or equals 100.") 
+    if(page_size > 100 or page_size <= 0):
+        raise ValidationError("Page size must be more than 0 and less or equals 100.") 
     
-    faces = session.query(Face).limit(limit).all()
+    page -= 1
+    total_count = session.query(Face).count()
+    if(page*page_size >= total_count):
+        raise ValidationError("Page and page count resulted out of range error.") 
+    
+    faces = session.query(Face).limit(page_size).offset(page*page_size).all()
     
     json_compatible_faces = jsonable_encoder(faces)
     result = {
-        "faces": json_compatible_faces
+        "faces": json_compatible_faces,
+        "total_count": total_count
         }
 
     json_resp = JSONResponse(content={
