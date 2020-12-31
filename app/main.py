@@ -1,24 +1,23 @@
-from fastapi import FastAPI, File, HTTPException
+from fastapi import FastAPI, File
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
+
 import insightface
 import json
+from datetime import datetime
 
-from sqlalchemy.sql.elements import Null
-from app.helper import url_to_image, file_to_image, string_to_nparray
-import numpy as np
-import cv2
-import app.logger as log
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
-
-from sqlalchemy import create_engine, exc
-from sqlalchemy.exc import IntegrityError
-import app.settings as settings
-from app.database.models import Face
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from datetime import datetime, date
-from typing import List, Optional
+from app.helper import url_to_image, file_to_image, string_to_nparray
+
+import app.logger as log
+import app.settings as settings
+from app.exception import *
+from app.exception.handling import *
+from app.database.models import Face
 from app.database import init as init_db, wait as wait_db
+from app.analyze import *
 
 
 app = FastAPI(title = "Insightface API")
@@ -55,7 +54,7 @@ async def analyze_image_url(url: str):
     log.debug("Calling analyze_image_url.")
 
     image = url_to_image(url)
-    faces = analyze_image(image)
+    faces = analyze_image(image, fa)
     res_faces = []
     for face in faces:
         res_faces.append({
@@ -81,7 +80,7 @@ async def analyze_image_file(file: bytes = File(...)):
     log.debug("Calling analyze_image_file.")
 
     image = file_to_image(file)
-    faces = analyze_image(image)
+    faces = analyze_image(image, fa)
     
     res_faces = []
     for face in faces:
@@ -112,7 +111,7 @@ async def upload_selfie(name: str, file: bytes = File(...)):
         raise ValidationError("Name must be unique.")
 
     image = file_to_image(file)
-    fa_faces = analyze_image(image)
+    fa_faces = analyze_image(image, fa)
 
     fa_emb_str = str(json.dumps(fa_faces[0].embedding.tolist()))
     emb = "cube(ARRAY" + fa_emb_str+ ")"
@@ -153,7 +152,7 @@ async def update_face(id: int, name: str = None, file: bytes = File(None)):
 
     if(file is not None):
         image = file_to_image(file)
-        fa_faces = analyze_image(image)
+        fa_faces = analyze_image(image, fa)
         fa_emb_str = str(json.dumps(fa_faces[0].embedding.tolist()))
         emb = "cube(ARRAY" + fa_emb_str+ ")"
         update_query = "UPDATE faces SET embedding = " + emb + " WHERE id = '" + str(db_face.id) + "';"
@@ -194,7 +193,7 @@ async def face_verification(name: str, file: bytes = File(...)):
 
     image = file_to_image(file)
 
-    fa_faces = analyze_image(image)
+    fa_faces = analyze_image(image, fa)
     inp_face = fa_faces[0]
 
     target_emb = string_to_nparray(target_face.embedding)
@@ -227,7 +226,7 @@ async def face_search(file: bytes = File(...)):
 
     image = file_to_image(file)
 
-    fa_faces = analyze_image(image)
+    fa_faces = analyze_image(image, fa)
     inp_face = fa_faces[0]
 
     fa_emb_str = str(json.dumps(inp_face.embedding.tolist()))
@@ -350,78 +349,29 @@ async def delete_face(name: str):
     return json_resp
 
 
-class ValidationError(Exception):
-    pass
-
-
-class NotFoundError(Exception):
-    pass
-
-
 @app.exception_handler(NotFoundError)
-async def validation_error_handler(request, exc):
+async def not_found_error_handler(request, exc):
     log.error(str(exc))
-    json_resp = getErrorResponse(status_code=404, message=str(exc))
+    json_resp = get_error_response(status_code=404, message=str(exc))
     return json_resp
 
 
 @app.exception_handler(ValidationError)
 async def validation_error_handler(request, exc):
     log.error(str(exc))
-    json_resp = getErrorResponse(status_code=422, message=str(exc))
+    json_resp = get_error_response(status_code=422, message=str(exc))
     return json_resp
 
 
 @app.exception_handler(RequestValidationError)
 async def request_validation_error_handler(request, exc):
     log.error(str(exc))
-    json_resp = getErrorResponse(status_code=400, message=str(exc))
+    json_resp = get_error_response(status_code=400, message=str(exc))
     return json_resp
 
 
 @app.exception_handler(Exception)
 async def exception_handler(request, exc):
     log.error(str(exc))
-    json_resp = getDefaultErrorResponse()
+    json_resp = get_default_error_response()
     return json_resp
-
-
-def compute_similarity(embedding1, embedding2):
-    log.debug("Calculating similarity.")
-    try:
-        sim = np.dot(embedding1, embedding2) / (np.linalg.norm(embedding1) * np.linalg.norm(embedding2))
-        return sim
-    except Exception as exc:
-        log.error(exc)
-        return -99
-
-
-def analyze_image(img):
-    res_faces = []
-    try:
-        faces = fa.get(img)
-        for _, face in enumerate(faces):
-            log.debug("Processing face.")
-            gender = 'M'
-            if face.gender==0:
-                gender = 'F'
-            emb = face.embedding / np.linalg.norm(face.embedding)
-            res_faces.append(Face(age = face.age, gender = gender, embedding = emb))
-    except Exception as exc:
-        log.error(exc)
-    finally:
-        return res_faces
-
-
-def getDefaultErrorResponse(status_code=500, message="Internal Server Error"):
-    return JSONResponse(status_code=status_code, content={
-        "status_code": status_code,
-        "message": message
-        })
-
-
-def getErrorResponse(status_code, message):
-    return JSONResponse(status_code=status_code, content={
-        "status_code": status_code,
-        "message": message
-        })
