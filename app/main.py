@@ -97,7 +97,7 @@ async def face_verification(name: str, file: bytes = File(...)):
     
     name = name.lower()
     target_face = session.query(Face).filter_by(name = name).first()
-    if target_face != None:
+    if target_face is None:
         raise NotFoundError("Face with that name does not exist in database.")
 
     image = file_to_image(file)
@@ -127,10 +127,14 @@ async def face_verification(name: str, file: bytes = File(...)):
 
 
 @app.post("/face-search")
-async def face_search(file: bytes = File(...)):
+async def face_search(file: bytes = File(...), limit: int = 1):
     # Supports single face in a single image
 
     log.debug("Calling face_search.")
+
+    if(limit > 10 or limit <= 0):
+        raise ValidationError("Limit must be more than 0 and less or equals 10.") 
+
     session = Session()
 
     image = file_to_image(file)
@@ -147,8 +151,9 @@ async def face_search(file: bytes = File(...)):
             "SELECT *, (1-(POWER(( embedding <-> " + emb + " ),2)/2))*100 AS similarity "
             "FROM faces "
         ") AS sub "
-        "WHERE sub.gender = '" + inp_face.gender + "' AND sub.similarity > 60 "
-        "ORDER BY sub.similarity DESC;"
+        "WHERE sub.gender = '" + inp_face.gender + "' AND sub.similarity > 50 "
+        "ORDER BY sub.similarity DESC "
+        "LIMIT " + str(limit) + ";"
         )
     
     query_res = session.execute(query)
@@ -159,7 +164,6 @@ async def face_search(file: bytes = File(...)):
     for row_proxy in rows_proxy:
         for column, value in row_proxy.items():
             dict = {**dict, **{column: value}}
-            print(dict)
         arr.append(dict)
 
     result = jsonable_encoder({
@@ -220,10 +224,11 @@ async def get_faces(page_size: int = 10, page: int = 1):
     # Get faces from db
     
     log.debug("Calling get_faces.")
-    session = Session()
-        
+
     if(page_size > 100 or page_size <= 0):
         raise ValidationError("Page size must be more than 0 and less or equals 100.") 
+
+    session = Session()
     
     page -= 1
     total_count = session.query(Face).count()
