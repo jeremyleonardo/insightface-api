@@ -297,7 +297,7 @@ async def face_search(file: bytes = File(...)):
             "SELECT sub.* "
             "FROM "
             "( "
-                "SELECT *, (1-(( embedding <-> " + emb + " )/2))*100 AS similarity "
+                "SELECT *, (1-(POWER(( embedding <-> " + emb + " ),2)/2))*100 AS similarity "
                 "FROM faces "
             ") AS sub "
             "WHERE sub.gender = '" + inp_face.gender + "' AND sub.similarity > 60 "
