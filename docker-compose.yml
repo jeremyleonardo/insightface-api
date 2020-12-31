@@ -5,7 +5,6 @@ services:
     image: jeremyleo/insightface-api:latest
     command: pipenv run uvicorn app.main:app --host 0.0.0.0 --port 80   # add --reload for development
     volumes:
-      - ./models:/root/.insightface/models
       - ./app:/app/   # for development purpose
     ports:
       - "80:80"

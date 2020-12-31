@@ -80,8 +80,6 @@ services:
 
 ## Models
 
-Optional: Download & extract everything and put it on the models folder only if you're using docker-compose
-
 Original source:
 - arcface_r100_v1 : http://insightface.ai/files/models/arcface_r100_v1.zip
 - genderage_v1 : http://insightface.ai/files/models/genderage_v1.zip
@@ -89,4 +87,3 @@ Original source:
 
 Alternative:
 - https://github.com/jeremy-leonardo/insightface-models
-
