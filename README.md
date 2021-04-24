@@ -4,6 +4,9 @@
 
 A simple <a href="https://github.com/deepinsight/insightface">deepinsight/insightface</a> implementation with <a href="https://github.com/tiangolo/fastapi">FastAPI</a> for face verification.
 
+## Possible Improvements
+- Use a proper db migration package such as alembic
+
 ## Available APIs
 
 It is recommended to test the available APIs from ``[GET] /docs``
