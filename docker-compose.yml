@@ -1,9 +1,11 @@
 version: "3.8"
    
 services:
-  api:
-    image: jeremyleo/insightface-api:latest
-    command: pipenv run uvicorn app.main:app --host 0.0.0.0 --port 80   # add --reload for development
+  app:
+    build:
+      context: .
+      dockerfile: ./dockerfiles/app.Dockerfile
+    command: poetry run uvicorn app.main:app --host 0.0.0.0 --port 80   # add --reload for development
     volumes:
       - ./app:/app/   # for development purpose
     ports:
@@ -18,7 +20,9 @@ services:
     # env_file:
     #   - .env
   db:
-    image: jeremyleo/postgres-2k-cube:13.1
+    build:
+      context: .
+      dockerfile: ./dockerfiles/postgres.Dockerfile
     ports:
       - '5432:5432'
     environment:

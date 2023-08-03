@@ -5,7 +5,7 @@
 A simple <a href="https://github.com/deepinsight/insightface">deepinsight/insightface</a> implementation with <a href="https://github.com/tiangolo/fastapi">FastAPI</a> for face verification.
 
 ## Possible Improvements
-- Use a proper db migration package such as alembic
+- [ ] Use a proper db migration package such as alembic
 
 ## Available APIs
 
@@ -41,47 +41,26 @@ It is recommended to test the available APIs from ``[GET] /docs``
 - ``[POST] /compute-selfie-image-files-similarity`` -  Compute Selfie Image Files Similarity
   - Compute similarity of 2 selfie image files (does not save to database)
 
-## Starting
+## Quickstart
 
-Using docker-compose:
+Using docker-compose (RECOMMENDED):
 ```
 docker-compose up
 ```
+
 Using pipenv (you'll need to setup postgresql and .env on your own):
 ```
 pipenv run uvicorn app.main:app --reload
 ```
 
-## Docker Compose
-
-docker-compose.yml
-```yml
-version: "3.8"
-   
-services:
-  api:
-    image: jeremyleo/insightface-api:latest
-    command: pipenv run uvicorn app.main:app --host 0.0.0.0 --port 80
-    volumes:
-      - ./models:/root/.insightface/models
-    ports:
-      - "80:80"
-    depends_on:
-      - db
-    environment: 
-      - DATABASE_URL=postgres://postgres:password@db/insightface_db
-  db:
-    image: jeremyleo/postgres-2k-cube:13.1
-    ports:
-      - '5432:5432'
-    environment:
-      - POSTGRES_DB=insightface_db
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=password
-
+Using poetry (you'll need to setup postgresql and .env on your own):
+```
+poetry run uvicorn app.main:app --reload
 ```
 
 ## Models
+
+You can download the model files and move them into `~/.insightface/models`
 
 Original source:
 - arcface_r100_v1 : http://insightface.ai/files/models/arcface_r100_v1.zip

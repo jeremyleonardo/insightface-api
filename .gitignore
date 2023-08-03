@@ -1,3 +1,6 @@
 .vscode
 *.log
 *.env
+.ruff_cache
+__pycache__
+insightface-models
