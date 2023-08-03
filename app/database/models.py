@@ -1,10 +1,11 @@
+from sqlalchemy import Column, DateTime, Integer, String, UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, DateTime, Text, UniqueConstraint, MetaData, Table
+
 from app.database.custom_types import Cube
 
 # _metadata = MetaData()
 
-# faces = Table('faces', _metadata, 
+# faces = Table('faces', _metadata,
 #     Column('id', Integer, primary_key=True),
 #     Column('name', String),
 #     Column('age', Integer),
@@ -16,8 +17,9 @@ from app.database.custom_types import Cube
 
 Base = declarative_base()
 
+
 class Face(Base):
-    __tablename__ = 'faces'
+    __tablename__ = "faces"
     id = Column(Integer, primary_key=True)
     name = Column(String)
     age = Column(Integer)
@@ -25,10 +27,11 @@ class Face(Base):
     embedding = Column(Cube)
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
-    __table_args__ = (
-        UniqueConstraint('name'),
-        )
+    __table_args__ = (UniqueConstraint("name"),)
 
     def __repr__(self):
         return "<Face(name='%s', age='%d', gender='%s')>" % (
-            self.name, self.age, self.gender)
+            self.name,
+            self.age,
+            self.gender,
+        )

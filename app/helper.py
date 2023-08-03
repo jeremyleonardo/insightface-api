@@ -1,8 +1,11 @@
-import cv2
-import numpy as np
 import urllib
 import urllib.request
+
+import cv2
+import numpy as np
+
 import app.logger as log
+
 
 def url_to_image(url):
     log.debug("Converting url to image")
@@ -32,7 +35,7 @@ def string_to_nparray(string):
     try:
         rpr = string.replace("(", "")
         rpr = rpr.replace(")", "")
-        res = np.fromstring(rpr, dtype=float, sep=',')
+        res = np.fromstring(rpr, dtype=float, sep=",")
         return res
     except Exception as exc:
         log.error(exc)

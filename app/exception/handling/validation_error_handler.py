@@ -1,5 +1,7 @@
 import app.logger as log
+
 from . import get_error_response
+
 
 def not_found_error_handler(request, exc):
     log.error(str(exc))

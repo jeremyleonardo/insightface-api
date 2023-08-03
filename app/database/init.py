@@ -4,7 +4,6 @@ from app.database.models import Base
 
 
 def init(engine):
-
     if settings.DROP_ALL_EACH_RUN:
         try:
             log.debug("Dropping tables.")
@@ -12,12 +11,12 @@ def init(engine):
         except Exception as exc:
             log.error("Failed to drop tables.")
             log.error(exc)
-    
+
     if settings.CREATE_ALL_EACH_RUN:
         try:
             log.debug("Creating extension cube.")
             engine.execute("create extension cube;")
-        except Exception as exc:
+        except Exception:
             pass
         try:
             log.debug("Creating tables.")

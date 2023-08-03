@@ -1,4 +1,5 @@
 import logging
+
 import app.settings as settings
 
 filename = "main"
@@ -6,9 +7,9 @@ filename = "main"
 logging.basicConfig(
     level=logging.DEBUG if settings.DEBUG else logging.INFO,
     format="{asctime} {levelname:<8}: {message}",
-    style='{',
-    filename='%s.log' % filename,
-    filemode='w'
+    style="{",
+    filename="%s.log" % filename,
+    filemode="w",
 )
 
 
@@ -28,12 +29,12 @@ def error(message):
 
 
 class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKCYAN = '\033[96m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
+    HEADER = "\033[95m"
+    OKBLUE = "\033[94m"
+    OKCYAN = "\033[96m"
+    OKGREEN = "\033[92m"
+    WARNING = "\033[93m"
+    FAIL = "\033[91m"
+    ENDC = "\033[0m"
+    BOLD = "\033[1m"
+    UNDERLINE = "\033[4m"
