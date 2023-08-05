@@ -2,13 +2,11 @@
 
 set -e
 
-echo "Downloading model files..."
-git clone https://github.com/jeremyleonardo/insightface-models.git
-cd ./insightface-models
-echo "Merging zip files..."
-cat ./models.zip* > ./models.zip
-echo "Extracting..."
-7z -y x models.zip -o"./models"
-mkdir ~/.insightface/models
-cp -r ./models ~/.insightface/models
-echo "Model files extracted to ~/.insightface/models"
+RUN git clone https://github.com/jeremyleonardo/insightface-models.git
+RUN echo "Merging zip files..."
+RUN cat ./insightface-models/models.zip.* > ./models.zip
+RUN echo "Extracting..."
+RUN 7z -y x models.zip -o"./models"
+RUN mkdir -p ~/.insightface
+RUN cp -r ./models ~/.insightface
+RUN echo "Model files extracted to ~/.insightface/models"

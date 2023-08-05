@@ -10,6 +10,8 @@ RUN apt-get install -y \
     libglib2.0-0 \
     libpq-dev \
     && pip3 install poetry
+RUN apt-get install -y p7zip-full
+RUN apt-get install -y git
 
 RUN \
     groupadd -g 999 dckr && useradd -u 999 -g dckr -G sudo -m -s /bin/bash dckr && \
@@ -21,27 +23,21 @@ RUN \
     echo "dckr user:";  su - dckr -c id
 
 USER dckr
+WORKDIR /src
 
-COPY pyproject.toml ./
-COPY poetry.lock ./
+COPY pyproject.toml poetry.lock /src/
 RUN poetry install --verbose
 
-RUN sudo apt-get install -y p7zip-full
-RUN sudo apt-get install -y git
-
-# COPY setup_model.sh ./
-# RUN /setup_model.sh
 RUN echo "Downloading model files..."
 RUN git clone https://github.com/jeremyleonardo/insightface-models.git
 RUN echo "Merging zip files..."
-RUN cat ./insightface-models/models.zip.* > ./models.zip
+RUN cat /src/insightface-models/models.zip.* > ./models.zip
 RUN echo "Extracting..."
-RUN 7z -y x models.zip -o"./models"
-RUN mkdir -p ~/.insightface/models
-RUN cp -r ./models ~/.insightface/models
+RUN 7z -y x models.zip -o"/src/models"
+RUN mkdir -p ~/.insightface
+RUN cp -r /src/models ~/.insightface
 RUN echo "Model files extracted to ~/.insightface/models"
 
-COPY init_model.py ./
+COPY init_model.py /src/
+COPY . /src
 RUN poetry run python init_model.py
-
-COPY ./app /app
