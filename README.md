@@ -43,6 +43,12 @@ It is recommended to test the available APIs from ``[GET] /docs``
 
 ## Quickstart
 
+### Setup
+
+First you must run `setup_model.sh` to load the model.
+
+### Run
+
 Using docker-compose (RECOMMENDED):
 ```
 docker-compose up
@@ -60,7 +66,7 @@ poetry run uvicorn app.main:app --reload
 
 ## Models
 
-You can download the model files and move them into `~/.insightface/models`
+You can download the model files and move them into `~/.insightface/models` manually or just use `setup_model.sh`
 
 Original source:
 - arcface_r100_v1 : http://insightface.ai/files/models/arcface_r100_v1.zip
