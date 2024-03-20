@@ -1,6 +1,6 @@
-FROM postgres:13.1
+FROM postgres:13.14
 
-ENV PG_VERSION 13.1
+ENV PG_VERSION 13.14
 
 RUN set -xe  \
     && apt-get update && apt-get install -y build-essential curl postgresql-server-dev-13 \
