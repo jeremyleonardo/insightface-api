@@ -1,9 +1,9 @@
-FROM postgres:13.14
+FROM postgres:16.2
 
-ENV PG_VERSION 13.14
+ENV PG_VERSION 16.2
 
 RUN set -xe  \
-    && apt-get update && apt-get install -y build-essential curl postgresql-server-dev-13 \
+    && apt-get update && apt-get install -y build-essential curl postgresql-server-dev-16 \
     && mkdir /build \
     && curl https://ftp.postgresql.org/pub/source/v$PG_VERSION/postgresql-$PG_VERSION.tar.bz2 \
             -o /build/postgresql-$PG_VERSION.tar.bz2 \
